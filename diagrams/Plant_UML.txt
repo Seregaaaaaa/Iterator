@@ -1,0 +1,98 @@
+@startuml "Iterator Pattern"
+
+' Абстрактные классы и интерфейсы
+abstract class Iterator {
+  +__iter__(): Iterator
+  +__next__(): obj
+  +has_next(): Boolean
+}
+
+abstract class Aggregate {
+  +create_iterator(): Iterator
+  +__len__(): Integer
+}
+
+' Конкретные классы итератора и агрегата
+class DataIterator {
+  -data_aggregate: obj
+  -current_batch: Integer
+  -indices: obj
+  +__iter__(): DataIterator
+  +__next__(): obj
+  +has_next(): Boolean
+}
+
+class DataAggregate {
+  -X: obj
+  -y: obj
+  -batch_size: Integer
+  -shuffle: Boolean
+  -n_samples: Integer
+  -n_batches: Integer
+  +create_iterator(): DataIterator
+  +__len__(): Integer
+}
+
+' Вспомогательный класс-обертка
+class DataLoader {
+  -aggregate: obj
+  -iterator: obj
+  +__iter__(): DataLoader
+  +__next__(): obj
+  +__len__(): Integer
+}
+
+' Классы обучения и оптимизации
+class SGDTrainer {
+  -X: obj
+  -y: obj
+  -batch_size: Integer
+  -initial_w: obj
+  -lr_w: Real
+  -lr_bn: Real
+  -n_epochs: Integer
+  -epsilon_bn: Real
+  -w_hist_no_bn: obj
+  -w_hist_bn: obj
+  -w_final_no_bn: obj
+  -w_final_bn: obj
+  -training_in_progress: Boolean
+  -epoch_no_bn: Integer
+  -epoch_bn: Integer
+  -callback: obj
+  +train_no_bn(callback: obj): void
+  +train_with_bn(callback: obj, freeze_bn_params: Boolean): void
+  +get_histories(): obj
+  +get_final_weights(): obj
+}
+
+' Класс для визуализации
+class BatchNormVisualizationApp {
+  -screen: obj
+  -clock: obj
+  -manager: obj
+  -X: obj
+  -y: obj
+  -true_w: obj
+  -trainer: obj
+  -contour_surface: obj
+  -contour_rect: obj
+  -no_bn_training_thread: obj
+  -bn_training_thread: obj
+  +setup_ui(): void
+  +update_gui(update_no_bn: Boolean, update_bn: Boolean): void
+  +update_plot(): void
+  +draw(): void
+  +reset(): void
+  +run(): void
+}
+
+' Отношения между классами
+Iterator <|-- DataIterator: implements
+Aggregate <|-- DataAggregate: implements
+DataAggregate o-- DataIterator: creates
+DataLoader *-- DataAggregate: contains
+SGDTrainer --> DataLoader: uses
+BatchNormVisualizationApp *-- SGDTrainer: contains
+
+@enduml
