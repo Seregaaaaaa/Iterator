@@ -68,7 +68,6 @@ class DataAggregate(Aggregate):
     def __len__(self):
         return self.n_batches
 
-# Для обратной совместимости с существующим кодом
 class DataLoader:
     """Класс-обертка для обратной совместимости"""
     def __init__(self, X, y, batch_size, shuffle=True):

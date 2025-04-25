@@ -1,5 +1,3 @@
-@startuml "Iterator Pattern"
-
 ' Абстрактные классы и интерфейсы
 abstract class Iterator {
   +__iter__(): Iterator
@@ -42,6 +40,50 @@ class DataLoader {
   +__len__(): Integer
 }
 
+' Абстрактный класс тренера
+abstract class AbstractTrainer {
+  -X: obj
+  -y: obj
+  -batch_size: Integer
+  -initial_w: obj
+  -lr_w: Real
+  -n_epochs: Integer
+  -w_history: obj
+  -w_final: obj
+  -training_in_progress: Boolean
+  -current_epoch: Integer
+  -callback: obj
+  +train(callback: obj): obj
+  #{abstract} reset_epoch_counter(): void
+  #{abstract} initialize_params(): obj
+  #{abstract} prepare_data_iterator(): Iterator
+  #{abstract} perform_epoch(w: obj, w_history: obj, params: obj, data_iterator: Iterator): obj
+  #{abstract} update_callback(): void
+  #{abstract} save_training_results(w: obj, w_history: obj): void
+}
+
+' Конкретные реализации тренеров
+class SGDTrainerNoBN {
+  +reset_epoch_counter(): void
+  +initialize_params(): obj
+  +prepare_data_iterator(): Iterator
+  +perform_epoch(w: obj, w_history: obj, params: obj, data_iterator: Iterator): obj
+  +update_callback(): void
+  +save_training_results(w: obj, w_history: obj): void
+}
+
+class SGDTrainerWithBN {
+  -lr_bn: Real
+  -epsilon_bn: Real
+  -freeze_bn_params: Boolean
+  +reset_epoch_counter(): void
+  +initialize_params(): obj
+  +prepare_data_iterator(): Iterator
+  +perform_epoch(w: obj, w_history: obj, params: obj, data_iterator: Iterator): obj
+  +update_callback(): void
+  +save_training_results(w: obj, w_history: obj): void
+}
+
 ' Классы обучения и оптимизации
 class SGDTrainer {
   -X: obj
@@ -60,8 +102,10 @@ class SGDTrainer {
   -epoch_no_bn: Integer
   -epoch_bn: Integer
   -callback: obj
-  +train_no_bn(callback: obj): void
-  +train_with_bn(callback: obj, freeze_bn_params: Boolean): void
+  -trainer_no_bn: SGDTrainerNoBN
+  -trainer_with_bn: SGDTrainerWithBN
+  +train_no_bn(callback: obj): obj
+  +train_with_bn(callback: obj, freeze_bn_params: Boolean): obj
   +get_histories(): obj
   +get_final_weights(): obj
 }
@@ -92,7 +136,13 @@ Iterator <|-- DataIterator: implements
 Aggregate <|-- DataAggregate: implements
 DataAggregate o-- DataIterator: creates
 DataLoader *-- DataAggregate: contains
+
+AbstractTrainer <|-- SGDTrainerNoBN: extends
+AbstractTrainer <|-- SGDTrainerWithBN: extends
+SGDTrainer *-- SGDTrainerNoBN: contains
+SGDTrainer *-- SGDTrainerWithBN: contains
 SGDTrainer --> DataLoader: uses
+AbstractTrainer --> DataLoader: uses
 BatchNormVisualizationApp *-- SGDTrainer: contains
 
 @enduml
