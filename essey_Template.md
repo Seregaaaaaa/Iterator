@@ -25,22 +25,30 @@
 
 В проекте паттерн "Шаблонный метод" реализован в модуле trainer.py и состоит из следующих компонентов:
 
-1. **Абстрактный базовый класс** (`BaseTrainer`) — определяет общую структуру алгоритма обучения:
+1. **Абстрактный базовый класс** (`AbstractTrainer`) — определяет общую структуру алгоритма обучения:
    - `train()` — шаблонный метод, который определяет последовательность шагов обучения
-   - `initialize_parameters()` — абстрактный метод для инициализации параметров модели
-   - `process_batch()` — абстрактный метод для обработки одного батча данных
-   - `update_model()` — абстрактный метод для обновления параметров модели
-   - `calculate_metrics()` — конкретный метод для расчёта метрик производительности модели
+   - `reset_epoch_counter()` — абстрактный метод для сброса счетчика эпох
+   - `initialize_params()` — абстрактный метод для инициализации параметров модели
+   - `prepare_data_iterator()` — абстрактный метод для подготовки итератора данных
+   - `perform_epoch()` — абстрактный метод для выполнения одной эпохи обучения
+   - `update_callback()` — абстрактный метод для обновления обратного вызова
+   - `save_training_results()` — абстрактный метод для сохранения результатов обучения
 
 2. **Конкретная реализация без BN** (`SGDTrainerNoBN`) — реализует алгоритм обучения без использования Batch Normalization:
-   - Переопределяет `initialize_parameters()` — простая инициализация весов
-   - Переопределяет `process_batch()` — прямой проход без нормализации
-   - Переопределяет `update_model()` — обновление весов с помощью обычного градиентного спуска
+   - Переопределяет `reset_epoch_counter()` — сбрасывает счетчик эпох
+   - Переопределяет `initialize_params()` — для обучения без BN не требуются дополнительные параметры
+   - Переопределяет `prepare_data_iterator()` — подготавливает данные для обучения без батчей
+   - Переопределяет `perform_epoch()` — выполняет обучение без нормализации
+   - Переопределяет `update_callback()` — обновляет UI через callback
+   - Переопределяет `save_training_results()` — сохраняет финальные веса и историю
 
 3. **Конкретная реализация с BN** (`SGDTrainerWithBN`) — реализует алгоритм обучения с использованием Batch Normalization:
-   - Переопределяет `initialize_parameters()` — инициализация весов и параметров BN
-   - Переопределяет `process_batch()` — прямой проход с нормализацией батча
-   - Переопределяет `update_model()` — обновление весов и параметров BN
+   - Переопределяет `reset_epoch_counter()` — сбрасывает счетчик эпох
+   - Переопределяет `initialize_params()` — инициализирует параметры gamma и beta для BN
+   - Переопределяет `prepare_data_iterator()` — подготавливает итератор по мини-батчам
+   - Переопределяет `perform_epoch()` — выполняет обучение с нормализацией
+   - Переопределяет `update_callback()` — обновляет UI через callback с информацией о BN
+   - Переопределяет `save_training_results()` — сохраняет финальные веса и историю
 
 На рисунке 1 изображена архитектура приложения с использованием паттерна "Шаблонный метод".
 
@@ -54,64 +62,104 @@
 
 1. **Единая структура алгоритма обучения**:
    ```python
-   # В базовом классе BaseTrainer
-   def train(self, data_loader, epochs):
-       self.initialize_parameters()  # Вызов метода, который будет переопределен в подклассах
+   # В абстрактном классе AbstractTrainer
+   def train(self, callback=None):
+       """Шаблонный метод, определяющий общую структуру алгоритма обучения"""
+       self.callback = callback
+       self.training_in_progress = True
+       self.reset_epoch_counter()
        
-       for epoch in range(epochs):
-           for X_batch, y_batch in data_loader:
-               # Шаги алгоритма, определенные в базовом классе
-               predictions = self.process_batch(X_batch)  # Переопределяется в подклассах
-               self.update_model(X_batch, y_batch, predictions)  # Переопределяется в подклассах
+       w = self.initial_w.copy()
+       w_history = [w.flatten()]
+       
+       # Инициализация дополнительных параметров
+       params = self.initialize_params()
+       
+       # Подготовка данных для обучения
+       data_iterator = self.prepare_data_iterator()
+       
+       for epoch in range(self.n_epochs):
+           self.current_epoch = epoch + 1
            
-           metrics = self.calculate_metrics()  # Общий метод для всех подклассов
-           # Логирование результатов эпохи
+           # Выполнение одной эпохи обучения
+           w, w_history, params = self.perform_epoch(w, w_history, params, data_iterator)
+           
+           # Обратный вызов для обновления UI
+           if callback and epoch % 1 == 0:
+               self.update_callback()
+       
+       # Сохранение результатов обучения
+       self.save_training_results(w, np.array(w_history))
+       self.training_in_progress = False
+       
+       return w, np.array(w_history)
    ```
    
-   Базовый класс определяет общую структуру алгоритма обучения, а конкретные подклассы реализуют специфические шаги этого алгоритма.
+   Абстрактный класс определяет общую структуру алгоритма обучения, а конкретные подклассы реализуют специфические шаги этого алгоритма.
 
 2. **Разделение ответственности**:
-   - Базовый класс `BaseTrainer` отвечает за общую логику процесса обучения
+   - Абстрактный класс `AbstractTrainer` отвечает за общую логику процесса обучения
    - `SGDTrainerNoBN` отвечает за специфику обучения без Batch Normalization
    - `SGDTrainerWithBN` отвечает за специфику обучения с Batch Normalization
    
    Это обеспечивает хорошую модульность и облегчает поддержку и тестирование кода.
 
-3. **Пример реализации метода в подклассе**:
+3. **Пример реализации методов в подклассах**:
    ```python
    # В классе SGDTrainerNoBN
-   def process_batch(self, X_batch):
-       # Простой прямой проход без нормализации
-       return X_batch @ self.weights + self.bias
+   def perform_epoch(self, w, w_history, params, data_iterator):
+       """Выполняет одну эпоху обучения без BN"""
+       X_full, y_full = data_iterator[0]
+       
+       grad_w = compute_batch_gradient_no_bn(X_full, y_full, w)
+       w = w - self.lr_w * grad_w
+       w_history.append(w.flatten())
+       
+       return w, w_history, params
    
    # В классе SGDTrainerWithBN
-   def process_batch(self, X_batch):
-       # Прямой проход с нормализацией батча
-       z = X_batch @ self.weights + self.bias
-       # Применяем Batch Normalization
-       mean = np.mean(z, axis=0)
-       var = np.var(z, axis=0)
-       z_norm = (z - mean) / np.sqrt(var + self.epsilon)
-       return self.gamma * z_norm + self.beta
+   def perform_epoch(self, w, w_history, params, data_iterator):
+       """Выполняет одну эпоху обучения с BN"""
+       gamma = params['gamma']
+       beta = params['beta']
+       
+       for X_batch, y_batch in data_iterator:
+           if len(y_batch) == 0:
+               continue
+           
+           grad_w, grad_gamma, grad_beta, _ = compute_bn_forward_and_grad(
+               X_batch, y_batch, w, gamma, beta, self.epsilon_bn, compute_grads=True
+           )
+           
+           if not self.freeze_bn_params:
+               gamma = gamma - self.lr_bn * grad_gamma
+               beta = beta - self.lr_bn * grad_beta
+           
+           w = w - self.lr_w * grad_w
+           w_history.append(w.flatten())
+       
+       params['gamma'] = gamma
+       params['beta'] = beta
+       
+       return w, w_history, params
    ```
    
    Каждый подкласс реализует специфические детали своего алгоритма, но общая последовательность шагов определена в базовом классе.
 
-4. **Hooks (крючки) для расширения функциональности**:
+4. **Различия в подготовке данных**:
    ```python
-   # В базовом классе BaseTrainer
-   def after_epoch_hook(self, epoch, metrics):
-       # По умолчанию ничего не делает, но подклассы могут переопределить
-       pass
+   # В классе SGDTrainerNoBN
+   def prepare_data_iterator(self):
+       """Для обучения без BN используется весь датасет сразу"""
+       return [(self.X, self.y)]
    
    # В классе SGDTrainerWithBN
-   def after_epoch_hook(self, epoch, metrics):
-       # Обновляем скользящие средние для параметров BN
-       self.running_mean = 0.9 * self.running_mean + 0.1 * self.batch_mean
-       self.running_var = 0.9 * self.running_var + 0.1 * self.batch_var
+   def prepare_data_iterator(self):
+       """Подготавливает итератор по мини-батчам данных"""
+       return DataLoader(self.X, self.y, self.batch_size, shuffle=True)
    ```
    
-   Базовый класс предоставляет необязательные "крючки", которые подклассы могут переопределять для расширения функциональности.
+   Базовый класс делегирует конкретным подклассам решение о том, как подготавливать данные, а сам использует готовый итератор.
 
 ## Заключение
 

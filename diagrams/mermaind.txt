@@ -1,131 +1,131 @@
 classDiagram
     class Iterator {
         <<abstract>>
-        +__iter__() Iterator
-        +__next__() obj
-        +has_next() Boolean
+        +__iter__(): Iterator
+        +__next__(): obj
+        +has_next(): Boolean
     }
 
     class Aggregate {
         <<abstract>>
-        +create_iterator() Iterator
-        +__len__() Integer
+        +create_iterator(): Iterator
+        +__len__(): Integer
     }
 
     class DataIterator {
-        -data_aggregate obj
-        -current_batch Integer
-        -indices obj
-        +__iter__() DataIterator
-        +__next__() obj
-        +has_next() Boolean
+        -data_aggregate: obj
+        -current_batch: Integer
+        -indices: obj
+        +__iter__(): DataIterator
+        +__next__(): obj
+        +has_next(): Boolean
     }
 
     class DataAggregate {
-        -X obj
-        -y obj
-        -batch_size Integer
-        -shuffle Boolean
-        -n_samples Integer
-        -n_batches Integer
-        +create_iterator() DataIterator
-        +__len__() Integer
+        -X: obj
+        -y: obj
+        -batch_size: Integer
+        -shuffle: Boolean
+        -n_samples: Integer
+        -n_batches: Integer
+        +create_iterator(): DataIterator
+        +__len__(): Integer
     }
 
     class DataLoader {
-        -aggregate obj
-        -iterator obj
-        +__iter__() DataLoader
-        +__next__() obj
-        +__len__() Integer
+        -aggregate: obj
+        -iterator: obj
+        +__iter__(): DataLoader
+        +__next__(): obj
+        +__len__(): Integer
     }
 
     class AbstractTrainer {
         <<abstract>>
-        -X obj
-        -y obj
-        -batch_size Integer
-        -initial_w obj
-        -lr_w Real
-        -n_epochs Integer
-        -w_history obj
-        -w_final obj
-        -training_in_progress Boolean
-        -current_epoch Integer
-        -callback obj
-        +train(callback obj) obj
-        #reset_epoch_counter()* void
-        #initialize_params()* obj
-        #prepare_data_iterator()* Iterator
-        #perform_epoch(w obj, w_history obj, params obj, data_iterator Iterator)* obj
-        #update_callback()* void
-        #save_training_results(w obj, w_history obj)* void
+        -X: obj
+        -y: obj
+        -batch_size: Integer
+        -initial_w: obj
+        -lr_w: Real
+        -n_epochs: Integer
+        -w_history: obj
+        -w_final: obj
+        -training_in_progress: Boolean
+        -current_epoch: Integer
+        -callback: obj
+        +train(callback: obj): obj
+        #reset_epoch_counter()*: void
+        #initialize_params()*: obj
+        #prepare_data_iterator()*: Iterator
+        #perform_epoch(w: obj, w_history: obj, params: obj, data_iterator: Iterator)*: obj
+        #update_callback()*: void
+        #save_training_results(w: obj, w_history: obj)*: void
     }
 
     class SGDTrainerNoBN {
-        +reset_epoch_counter() void
-        +initialize_params() obj
-        +prepare_data_iterator() Iterator
-        +perform_epoch(w obj, w_history obj, params obj, data_iterator Iterator) obj
-        +update_callback() void
-        +save_training_results(w obj, w_history obj) void
+        +reset_epoch_counter(): void
+        +initialize_params(): obj
+        +prepare_data_iterator(): Iterator
+        +perform_epoch(w: obj, w_history: obj, params: obj, data_iterator: Iterator): obj
+        +update_callback(): void
+        +save_training_results(w: obj, w_history: obj): void
     }
 
     class SGDTrainerWithBN {
-        -lr_bn Real
-        -epsilon_bn Real
-        -freeze_bn_params Boolean
-        +reset_epoch_counter() void
-        +initialize_params() obj
-        +prepare_data_iterator() Iterator
-        +perform_epoch(w obj, w_history obj, params obj, data_iterator Iterator) obj
-        +update_callback() void
-        +save_training_results(w obj, w_history obj) void
+        -lr_bn: Real
+        -epsilon_bn: Real
+        -freeze_bn_params: Boolean
+        +reset_epoch_counter(): void
+        +initialize_params(): obj
+        +prepare_data_iterator(): Iterator
+        +perform_epoch(w: obj, w_history: obj, params: obj, data_iterator: Iterator): obj
+        +update_callback(): void
+        +save_training_results(w: obj, w_history: obj): void
     }
 
     class SGDTrainer {
-        -X obj
-        -y obj
-        -batch_size Integer
-        -initial_w obj
-        -lr_w Real
-        -lr_bn Real
-        -n_epochs Integer
-        -epsilon_bn Real
-        -w_hist_no_bn obj
-        -w_hist_bn obj
-        -w_final_no_bn obj
-        -w_final_bn obj
-        -training_in_progress Boolean
-        -epoch_no_bn Integer
-        -epoch_bn Integer
-        -callback obj
-        -trainer_no_bn SGDTrainerNoBN
-        -trainer_with_bn SGDTrainerWithBN
-        +train_no_bn(callback obj) obj
-        +train_with_bn(callback obj, freeze_bn_params Boolean) obj
-        +get_histories() obj
-        +get_final_weights() obj
+        -X: obj
+        -y: obj
+        -batch_size: Integer
+        -initial_w: obj
+        -lr_w: Real
+        -lr_bn: Real
+        -n_epochs: Integer
+        -epsilon_bn: Real
+        -w_hist_no_bn: obj
+        -w_hist_bn: obj
+        -w_final_no_bn: obj
+        -w_final_bn: obj
+        -training_in_progress: Boolean
+        -epoch_no_bn: Integer
+        -epoch_bn: Integer
+        -callback: obj
+        -trainer_no_bn: SGDTrainerNoBN
+        -trainer_with_bn: SGDTrainerWithBN
+        +train_no_bn(callback: obj): obj
+        +train_with_bn(callback: obj, freeze_bn_params: Boolean): obj
+        +get_histories(): obj
+        +get_final_weights(): obj
     }
 
     class BatchNormVisualizationApp {
-        -screen obj
-        -clock obj
-        -manager obj
-        -X obj
-        -y obj
-        -true_w obj
-        -trainer obj
-        -contour_surface obj
-        -contour_rect obj
-        -no_bn_training_thread obj
-        -bn_training_thread obj
-        +setup_ui() void
-        +update_gui(update_no_bn Boolean, update_bn Boolean) void
-        +update_plot() void
-        +draw() void
-        +reset() void
-        +run() void
+        -screen: obj
+        -clock: obj
+        -manager: obj
+        -X: obj
+        -y: obj
+        -true_w: obj
+        -trainer: obj
+        -contour_surface: obj
+        -contour_rect: obj
+        -no_bn_training_thread: obj
+        -bn_training_thread: obj
+        +setup_ui(): void
+        +update_gui(update_no_bn: Boolean, update_bn: Boolean): void
+        +update_plot(): void
+        +draw(): void
+        +reset(): void
+        +run(): void
     }
 
     Iterator <|-- DataIterator
